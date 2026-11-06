@@ -4,6 +4,10 @@ Dataset Extractor converts daily climate and geospatial CSV data into
 analysis-ready weekly summaries. It provides a reproducible pipeline, a Python
 API, and lower-level commands for file discovery and MERRA URL harvesting.
 
+The repository uses GitHub Actions for test and package-build checks. These
+checks run on every push and pull request. GitHub Pages deployment is
+intentionally not configured for this repository.
+
 ## Pipeline stages
 
 The supported pipeline:
@@ -158,6 +162,13 @@ python -m pytest -q
 
 The tests cover file discovery, weekly aggregation, and pipeline output
 creation.
+
+## Continuous integration
+
+The [CI workflow](.github/workflows/ci.yml) runs the test suite on Python 3.10,
+3.11, and 3.12. The [build workflow](.github/workflows/build.yml) builds the
+source and wheel distributions and validates their metadata with Twine.
+Neither workflow deploys files to GitHub Pages or publishes a package.
 
 ## Repository layout
 
