@@ -25,6 +25,7 @@ gis = [
 
 [project.scripts]
 dataset-converter = "dataset_converter.cli:main"
+dataset-pipeline = "dataset_converter.cli:pipeline_main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

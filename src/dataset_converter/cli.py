@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from .core import aggregate_weekly_csv, find_input_files
 from .downloaders import save_merra_urls
+from .pipeline import DatasetPipeline, PipelineConfig
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,6 +32,22 @@ def build_parser() -> argparse.ArgumentParser:
     download.add_argument("--end-year", type=int, default=2021)
     download.add_argument("--start-month", type=int, default=1)
     download.add_argument("--end-month", type=int, default=12)
+
+    pipeline = subparsers.add_parser(
+        "pipeline",
+        help="Run the complete local aggregation pipeline.",
+        description="Aggregate matching CSV files and optionally collect MERRA NC4 URLs.",
+    )
+    pipeline.add_argument("input_dir", type=Path)
+    pipeline.add_argument("output_dir", type=Path)
+    pipeline.add_argument("variable_name")
+    pipeline.add_argument("subbasin")
+    pipeline.add_argument("--merra-base-url")
+    pipeline.add_argument("--start-year", type=int, default=1980)
+    pipeline.add_argument("--end-year", type=int, default=2021)
+    pipeline.add_argument("--start-month", type=int, default=1)
+    pipeline.add_argument("--end-month", type=int, default=12)
+    pipeline.add_argument("--keep-leap-day", action="store_true")
 
     return parser
 
@@ -64,5 +82,31 @@ def main(argv=None) -> int:
         )
         return 0
 
+    if args.command == "pipeline":
+        result = DatasetPipeline(
+            PipelineConfig(
+                input_dir=args.input_dir,
+                output_dir=args.output_dir,
+                variable_name=args.variable_name,
+                subbasin=args.subbasin,
+                merra_base_url=args.merra_base_url,
+                start_year=args.start_year,
+                end_year=args.end_year,
+                start_month=args.start_month,
+                end_month=args.end_month,
+                drop_leap_day=not args.keep_leap_day,
+            )
+        ).run()
+        print(f"Created aggregate: {result.aggregate_path}")
+        if result.merra_urls_path:
+            print(f"Created URL list: {result.merra_urls_path}")
+        return 0
+
     parser.error(f"Unsupported command: {args.command}")
     return 2
+
+
+def pipeline_main(argv=None) -> int:
+    """Entry point for the dedicated dataset-pipeline console command."""
+    arguments = sys.argv[1:] if argv is None else argv
+    return main(["pipeline", *arguments])
